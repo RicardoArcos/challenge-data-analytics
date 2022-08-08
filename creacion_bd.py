@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
+from sqlalchemy import text
 
 from decouple import config
 
@@ -11,3 +12,11 @@ def get_engine():
         create_database(url)
     engine = create_engine(url)
     return engine
+
+engine = get_engine()
+
+def create_tables():
+    with engine.connect() as con:
+        with open("scripts_sql/tablas.sql") as file:
+            consulta = text(file.read())
+            con.execute(consulta)
