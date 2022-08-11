@@ -20,3 +20,9 @@ def create_tables():
         with open("scripts_sql/tablas.sql") as file:
             consulta = text(file.read())
             con.execute(consulta)
+            
+def add_columns():
+    with engine.connect() as con:
+        with open("scripts_sql/nueva_columna.sql") as file:
+            consulta = text(file.read())
+            con.execute(consulta)

@@ -3,7 +3,7 @@ import os
 import datetime
 import pandas as pd
 
-from creacion_bd import get_engine, create_tables
+from creacion_bd import get_engine, create_tables, add_columns
 
 from decouple import config
 
@@ -85,8 +85,14 @@ values_categoria = df_bd.groupby(['categoria']).size().to_frame(name = 'registro
 values_fuente = df_bd.loc[:, ['fuente', 'categoria']].value_counts().to_frame(name = 'registros_fuente')
 values_provincia = df_bd.loc[:, ['categoria', 'provincia']].value_counts().to_frame(name = 'registros_provincia_categoria')
 
-segunda_tabla = values_categoria.merge(values_fuente, how = 'outer', left_index = True, right_index = True)
-segunda_tabla = segunda_tabla.merge(values_provincia, how = 'outer', left_index = True, right_index = True)
+segunda_tabla = values_categoria.merge(values_fuente, 
+                                       how = 'outer', 
+                                       left_index = True, 
+                                       right_index = True)
+segunda_tabla = segunda_tabla.merge(values_provincia, 
+                                    how = 'outer', 
+                                    left_index = True, 
+                                    right_index = True)
 
 segunda_tabla = segunda_tabla.infer_objects()
 
@@ -108,3 +114,14 @@ segunda_tabla.to_sql('segunda_tabla', con = conexion, if_exists = 'replace')
 tercera_tabla.to_sql('tercera_tabla', con = conexion, if_exists = 'replace')
 
 # Creando la nueva columna de las tablas
+add_columns()
+
+# Añadiendo las fechas de carga a los dataframes
+primera_tabla = primera_tabla.assign(fecha_carga = date_two)
+segunda_tabla = segunda_tabla.assign(fecha_carga = date_two)
+tercera_tabla = tercera_tabla.assign(fecha_carga = date_two)
+
+# Actualizando las tablas a la bd
+primera_tabla.to_sql('primera_tabla', con = conexion, if_exists = 'replace')
+segunda_tabla.to_sql('segunda_tabla', con = conexion, if_exists = 'replace')
+tercera_tabla.to_sql('tercera_tabla', con = conexion, if_exists = 'replace')
