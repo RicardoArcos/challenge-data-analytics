@@ -2,11 +2,13 @@ import requests
 import os
 import datetime
 import pandas as pd
+import logging
 
 from creacion_bd import get_engine, create_tables, add_columns
 
 from decouple import config
 
+logging.basicConfig(level = logging.INFO)
 
 # Variables fecha
 dt = datetime.datetime.now()
@@ -14,6 +16,8 @@ date_one = dt.strftime("%Y-%B")
 date_two = dt.strftime("%d-%m-%Y")
 
 # Obteniendo los datos
+logging.info("Obteniendo los datos.")
+
 with requests.get(config('DATOS_MUSEOS')) as rq:
     os.makedirs(f'museos/{date_one}', exist_ok = True)
     with open(f'museos/{date_one}/museos-{date_two}.csv', 'wb') as file:
@@ -30,6 +34,8 @@ with requests.get(config('DATOS_BIBLIOTECAS')) as rq:
         file.write(rq.content)
 
 # Manipulando los datos
+logging.info("Manipulando los datos obtenidos.")
+
 df_museos = pd.read_csv(f'museos/{date_one}/museos-{date_two}.csv').set_axis(['cod_localidad',
                                                                               'id_provincia', 'id_departamento',
                                                                               'observaciones', 'categoria',
@@ -71,6 +77,8 @@ df_bibliotecas = pd.read_csv(f'bibliotecas/{date_one}/bibliotecas-{date_two}.csv
 df_bd = pd.concat([df_museos, df_cines, df_bibliotecas])
 
 # Creando la primera tabla
+logging.info("Creando las tablas para la base de datos.")
+
 primera_tabla = df_bd.filter(['cod_localidad', 
                             'id_provincia', 'id_departamento', 
                             'categoria', 'provincia', 
@@ -104,9 +112,13 @@ tercera_tabla.espacio_INCAA = tercera_tabla.espacio_INCAA.replace(to_replace = [
 tercera_tabla = tercera_tabla.infer_objects()
 
 # Conexión con la base de datos
+logging.info("Obteniendo la conexion de la base de datos.")
+
 conexion = get_engine()
 
 # Creando tablas y añadiendo registros
+logging.info("Creando las tablas y añadiendo la información")
+
 create_tables()
 
 primera_tabla.to_sql('primera_tabla', con = conexion, if_exists = 'replace')
@@ -114,6 +126,8 @@ segunda_tabla.to_sql('segunda_tabla', con = conexion, if_exists = 'replace')
 tercera_tabla.to_sql('tercera_tabla', con = conexion, if_exists = 'replace')
 
 # Creando la nueva columna de las tablas
+logging.info("Añadiendo la nueva columna a las tablas.")
+
 add_columns()
 
 # Añadiendo las fechas de carga a los dataframes
@@ -122,6 +136,8 @@ segunda_tabla = segunda_tabla.assign(fecha_carga = date_two)
 tercera_tabla = tercera_tabla.assign(fecha_carga = date_two)
 
 # Actualizando las tablas a la bd
+logging.info("Actualizando la informacion de las tablas.")
+
 primera_tabla.to_sql('primera_tabla', con = conexion, if_exists = 'replace')
 segunda_tabla.to_sql('segunda_tabla', con = conexion, if_exists = 'replace')
 tercera_tabla.to_sql('tercera_tabla', con = conexion, if_exists = 'replace')
