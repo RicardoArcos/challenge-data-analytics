@@ -8,7 +8,8 @@ from creacion_bd import get_engine, create_tables, add_columns
 
 from decouple import config
 
-logging.basicConfig(level = logging.INFO)
+logging.basicConfig(level = logging.INFO,
+                    format = "%(levelname)s %(asctime)s - %(message)s")
 
 # Variables fecha
 dt = datetime.datetime.now()
